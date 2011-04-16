@@ -1,0 +1,5 @@
+h1. Tyco
+
+Tyco helps you to quickly build static websites using "Glitter":glitter.
+
+Check out my "homepage":http://julien.richard-foy.fr as an example of Tyco based web site.
