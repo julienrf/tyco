@@ -14,17 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package tyco.site
+package tyco
 
-import tyco.compiler.Resource
+import glitter.Xml
 
-trait Site {
-  
-  def resources: Traversable[Resource]
-  
-  def target = "www"
-  
-  def compile() {
-    resources foreach (_.compile(target))
-  }
+package object compiler {
+  implicit def makeGlitter(content: Xml) = new Glitter(content)
 }
