@@ -19,5 +19,6 @@ package tyco
 import glitter.Xml
 
 package object compiler {
+  /** Automatically provides a `Glitter` compiler when processing Xml content */
   implicit def makeGlitter(content: Xml) = new Glitter(content)
 }

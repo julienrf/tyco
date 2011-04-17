@@ -18,12 +18,14 @@ package tyco.site
 
 import tyco.compiler.Resource
 
+/** A Site provides a set of resources reachable through URIs. */
 trait Site {
   
   def resources: Traversable[Resource]
   
-  def target = "www"
+  def target = "www" // TODO Remove (pass a parameter to the `compile` method)
   
+  /** Compiles all resources defined by this Site to a given target */
   def compile() {
     resources foreach (_.compile(target))
   }

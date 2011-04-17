@@ -14,22 +14,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/** Generic navigation concept */
 package tyco.navigation
 
 import glitter._
 
+/** A resource is anything having an URI. */
 trait Resource {
   def uri: String
 }
 
+/** An navigation item is a resource associated with a (human readable) name. */
 trait Item extends Resource {
   def name: String
 }
 
+/** Navigation data contain the list of items of a site and the current item */
 case class Navigation(items: Traversable[Item], current: Item)
 
 object Navigation {
-  
+  /** Display a `Navigation` instance as a HTML list */
   def _template(navigation: Navigation): Xml =
       'nav :: forM (navigation.items) { it =>
         val a: EmptyTag = if (it == navigation.current) 'a % ('class->"active") else 'a // FIXME not pretty
