@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package tyco.site
+package tyco
 
 import tyco.compiler.Resource
 
@@ -23,10 +23,8 @@ trait Site {
   
   def resources: Traversable[Resource]
   
-  def target = "www" // TODO Remove (pass a parameter to the `compile` method)
-  
   /** Compiles all resources defined by this Site to a given target */
-  def compile() {
+  def compile(target: String = "www") {
     resources foreach (_.compile(target))
   }
 }
