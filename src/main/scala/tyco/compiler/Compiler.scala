@@ -16,18 +16,20 @@
 
 package tyco.compiler
 
+import java.io.File
+import org.apache.commons.io.FileUtils
+import glitter._
+
 /** A web site contains resources reachable through URIs.
   * This type defines how such URI are mapped with content provided by a `Compiler`
   */
 case class Resource(compiler: Compiler, uri: String) {
-  import java.io.{PrintWriter, File}
-  
   /** Compile a resource */
   def compile(target: String) {
     print("Compiling "+uri+" ")
-    val out = new PrintWriter(new File(target+uri+"/index.html"))
-    out.write(compiler.process)
-    out.close();
+    val path = target + (if (uri.lastIndexOf("/") < uri.lastIndexOf(".")) uri
+                         else uri + "/index.html")
+    compiler.compile(path)
     println("OK");
   }
 }
@@ -36,27 +38,47 @@ case class Resource(compiler: Compiler, uri: String) {
   * Implement your own compiler as a trait if it is intended to be chained
   */
 abstract class Compiler {
+  
+  type Elem
+  
   /** Produce an output. */
-  def process: String
+  def process: Traversable[Elem]
+  def compile(target: String)
   def ==> (uri: String) = Resource(this, uri)
 }
 
-import glitter._
+abstract class TextCompiler extends Compiler {
+  
+  override type Elem = Char
+  
+  override def compile(target: String) {
+    FileUtils.writeStringToFile(new File(target), process.mkString)
+  }
+}
+
+abstract class BinCompiler extends Compiler {
+  
+  override type Elem = Byte
+  
+  override def compile(target: String) {
+    FileUtils.writeByteArrayToFile(new File(target), process.toArray)
+  }
+}
 
 /** Glitter compiler, just rendering the xml */
-class Glitter(content: Xml) extends Compiler {
+class Glitter(content: Xml) extends TextCompiler {
   override def process = content.render
 }
 
 /** TextFile compiler, reading a file */
-class TextFile(file: String) extends Compiler {
+class TextFile(file: File) extends TextCompiler {
   override def process = io.Source.fromFile(file).mkString
 }
 
 /** CoffeeScript compiler, translating a coffee script to legacy javascript.
   * Note that this compiler is an abstract trait, it is intended to be chained
   * with another compiler, e.g. `new TextFile(file) with CoffeeScript` */
-trait CoffeeScript extends Compiler {
+trait CoffeeScript extends TextCompiler {
   abstract override def process = {
     super.process
   }
@@ -65,29 +87,33 @@ trait CoffeeScript extends Compiler {
 /** Minify a given javascript content.
   * Chain this compiler like this: `new TextFile(file) with JsMinifier`
   */
-trait JsMinifier extends Compiler {
+trait JsMinifier extends TextCompiler {
   abstract override def process = {
     super.process
   }
 }
 
 /** Compile Markdown markup to HTML */
-trait Markdown extends Compiler {
+trait Markdown extends TextCompiler {
   abstract override def process = {
     super.process
   }
 }
 
 /** Compile SCSS into legacy CSS */
-trait Scss extends Compiler {
+trait Scss extends TextCompiler {
   abstract override def process = {
     super.process
   }
 }
 
 /** Minify a CSS input */
-trait CssMinifier extends Compiler {
+trait CssMinifier extends TextCompiler {
   abstract override def process = {
     super.process
   }
+}
+
+class BinFile(file: File) extends BinCompiler {
+  override def process = FileUtils.readFileToByteArray(file)
 }

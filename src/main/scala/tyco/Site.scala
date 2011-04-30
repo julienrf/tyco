@@ -17,6 +17,8 @@
 package tyco
 
 import tyco.compiler.Resource
+import org.apache.commons.io.FileUtils
+import java.io.File
 
 /** A Site provides a set of resources reachable through URIs. */
 trait Site {
@@ -24,7 +26,18 @@ trait Site {
   def resources: Traversable[Resource]
   
   /** Compiles all resources defined by this Site to a given target */
-  def compile(target: String = "www") {
+  def compile(target: String = "target/www") {
+    check()
+    FileUtils.deleteDirectory(new File(target))
     resources foreach (_.compile(target))
+  }
+  
+  /** Check that all resources have different URIs */
+  def check() {
+    for (resource <- resources) {
+      if (resources.count(_.uri == resource.uri) != 1) {
+        println("Warning: several resources have uri " + resource.uri)
+      }
+    }
   }
 }
