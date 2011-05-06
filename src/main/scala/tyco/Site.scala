@@ -16,28 +16,52 @@
 
 package tyco
 
-import tyco.compiler.Resource
+import tyco.compiler.Compiler
 import org.apache.commons.io.FileUtils
 import java.io.File
 
 /** A Site provides a set of resources reachable through URIs. */
 trait Site {
   
-  def resources: Traversable[Resource]
+  private[this] var resources = new collection.mutable.HashMap[String, Compiler]
+  
+  trait ResourceBuilder {
+    def ==> (c: Compiler)
+    def alias (uri: String)
+  }
+  
+  implicit def makeBuilder(uri: String): ResourceBuilder =
+    new ResourceBuilder {
+    
+      private def check(uri: String) {
+        if (resources contains uri) {
+          println("Warning: uri '" + uri + "' used multiple times")
+        }
+      }
+      
+      override def ==> (compiler: Compiler) {
+        check(uri)
+        resources += uri -> compiler
+      }
+      
+      override def alias (source: String) {
+        check(uri)
+        resources.get(source) match {
+          case Some(compiler) => resources += uri -> compiler
+          case None => println("Warning: no resource defined for uri '" + source + "'")
+        }
+      }
+    }
   
   /** Compiles all resources defined by this Site to a given target */
   def compile(target: String = "target/www") {
-    check()
     FileUtils.deleteDirectory(new File(target))
-    resources foreach (_.compile(target))
-  }
-  
-  /** Check that all resources have different URIs */
-  def check() {
-    for (resource <- resources) {
-      if (resources.count(_.uri == resource.uri) != 1) {
-        println("Warning: several resources have uri " + resource.uri)
-      }
+    for ((uri, compiler) <- resources) {
+      print("Compiling "+uri+" ")
+      val path = target + (if (uri.lastIndexOf("/") < uri.lastIndexOf(".")) uri
+                           else uri + "/index.html")
+      compiler.compile(path)
+      println("OK");
     }
   }
 }

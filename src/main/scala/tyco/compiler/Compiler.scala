@@ -20,20 +20,6 @@ import java.io.File
 import org.apache.commons.io.FileUtils
 import glitter._
 
-/** A web site contains resources reachable through URIs.
-  * This type defines how such URI are mapped with content provided by a `Compiler`
-  */
-case class Resource(compiler: Compiler, uri: String) {
-  /** Compile a resource */
-  def compile(target: String) {
-    print("Compiling "+uri+" ")
-    val path = target + (if (uri.lastIndexOf("/") < uri.lastIndexOf(".")) uri
-                         else uri + "/index.html")
-    compiler.compile(path)
-    println("OK");
-  }
-}
-
 /** Base class of compilers, subclassed to implement CoffeeScript or SCSS compilers.
   * Implement your own compiler as a trait if it is intended to be chained
   */
@@ -44,7 +30,6 @@ abstract class Compiler {
   /** Produce an output. */
   def process: Traversable[Elem]
   def compile(target: String)
-  def ==> (uri: String) = Resource(this, uri)
 }
 
 abstract class TextCompiler extends Compiler {
@@ -67,12 +52,12 @@ abstract class BinCompiler extends Compiler {
 
 /** Glitter compiler, just rendering the xml */
 class Glitter(content: Xml) extends TextCompiler {
-  override def process = content.render
+  override def process: Traversable[Char] = content.render
 }
 
 /** TextFile compiler, reading a file */
 class TextFile(file: File) extends TextCompiler {
-  override def process = io.Source.fromFile(file).mkString
+  override def process: Traversable[Char] = io.Source.fromFile(file).mkString
 }
 
 /** CoffeeScript compiler, translating a coffee script to legacy javascript.
@@ -115,5 +100,5 @@ trait CssMinifier extends TextCompiler {
 }
 
 class BinFile(file: File) extends BinCompiler {
-  override def process = FileUtils.readFileToByteArray(file)
+  override def process: Traversable[Byte] = FileUtils.readFileToByteArray(file)
 }

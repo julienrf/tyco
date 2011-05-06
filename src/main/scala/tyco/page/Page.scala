@@ -22,7 +22,7 @@ import tyco.navigation.{Item, Navigation}
 
 /** A Page is a web content identified by a slug, having a name and a content */
 case class Page(name: String, slug: String, content: Xml) extends Item {
-  def uri = "/" + slug
+  override val uri = "/" + slug
 }
 
 object Page {
