@@ -23,35 +23,34 @@ import java.io.File
 /** A Site provides a set of resources reachable through URIs. */
 trait Site {
   
-  private[this] var resources = new collection.mutable.HashMap[String, Compiler]
+  private[this] val resources = collection.mutable.Map.empty[String, Compiler]
   
-  trait ResourceBuilder {
+  type ResourceBuilder = {
     def ==> (c: Compiler)
-    def alias (uri: String)
+    def ==> (alias: String)
   }
   
-  implicit def makeBuilder(uri: String): ResourceBuilder =
-    new ResourceBuilder {
-    
-      private def check(uri: String) {
-        if (resources contains uri) {
-          println("Warning: uri '" + uri + "' used multiple times")
-        }
-      }
-      
-      override def ==> (compiler: Compiler) {
-        check(uri)
-        resources += uri -> compiler
-      }
-      
-      override def alias (source: String) {
-        check(uri)
-        resources.get(source) match {
-          case Some(compiler) => resources += uri -> compiler
-          case None => println("Warning: no resource defined for uri '" + source + "'")
-        }
+  implicit def makeBuilder(uri: String): ResourceBuilder = new {
+  
+    private def check(uri: String) {
+      if (resources contains uri) {
+        println("Warning: uri '" + uri + "' used multiple times")
       }
     }
+    
+    def ==> (compiler: Compiler) {
+      check(uri)
+      resources += uri -> compiler
+    }
+    
+    def ==> (alias: String) {
+      check(uri)
+      resources.get(alias) match {
+        case Some(compiler) => resources += uri -> compiler
+        case None => println("Warning: no resource defined for uri '" + alias + "'")
+      }
+    }
+  }
   
   /** Compiles all resources defined by this Site to a given target */
   def compile(target: String = "target/www") {
