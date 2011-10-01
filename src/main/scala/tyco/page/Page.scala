@@ -18,27 +18,15 @@
 package tyco.page
 
 import glitter._
-import tyco.navigation.{Item, Navigation}
 
-/** A Page is a web content identified by a slug, having a name and a content */
-case class Page(name: String, slug: String, content: Xml) extends Item {
-  override val uri = "/" + slug
-}
+/** A Page is a web content identified by a title and a content */
+case class Page(title: String, content: String)
 
 object Page {
   /** Basic page display (in a `section`, displaying its name in a `h1` tag) */
   def _template(page: Page) =
       'section %('id->"container") :: 'div %('class->"content") :: (
-          'h1 :: page.name
+          'h1 :: page.title
         | page.content
       )
-}
-
-/** A set of pages. */
-trait Pages {
-  
-  def pages: Traversable[Page]
-  
-  /** Compute a `Navigation` instance according to a given current page */
-  def navigation(current: Page) = Navigation(pages, current)
 }

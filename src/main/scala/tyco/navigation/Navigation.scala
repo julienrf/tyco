@@ -19,24 +19,27 @@ package tyco.navigation
 
 import glitter._
 
-/** A resource is anything having an URI. */
-trait Resource {
-  def uri: String
+case class Item(uri: String, name: String)
+
+object Item {
+  implicit def tuple2ToItem(tuple: Tuple2[String, String]) = Item(tuple._1, tuple._2)
 }
 
-/** An navigation item is a resource associated with a (human readable) name. */
-trait Item extends Resource {
-  def name: String
+/** The sitemap reflects the way the web pages are structured */
+case class Sitemap(items: Traversable[Item]) {
+  def navigation(current: String) = Navigation(items, current)
 }
 
 /** Navigation data contain the list of items of a site and the current item */
-case class Navigation(items: Traversable[Item], current: Item)
+case class Navigation(items: Traversable[Item], current: String) {
+  def currentName = items.find(_.uri == current).get.name // Not very sound function
+}
 
 object Navigation {
   /** Display a `Navigation` instance as a HTML list */
   def _template(navigation: Navigation): Xml =
       'nav :: forM (navigation.items) { it =>
-        val a: EmptyTag = if (it == navigation.current) 'a % ('class->"active") else 'a // FIXME not pretty
+        val a: EmptyTag = if (it.uri == navigation.current) 'a % ('class->"active") else 'a // FIXME not pretty
         a %('href->it.uri, 'title->it.name) :: it.name
       }
 }
