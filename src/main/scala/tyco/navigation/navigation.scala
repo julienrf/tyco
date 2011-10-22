@@ -22,24 +22,24 @@ import glitter._
 case class Item(uri: String, name: String)
 
 object Item {
+  def apply(t: Tuple2[String, String]): Item = Item(t._1, t._2)
   implicit def tuple2ToItem(tuple: Tuple2[String, String]) = Item(tuple._1, tuple._2)
 }
 
-/** The sitemap reflects the way the web pages are structured */
+/** The sitemap reflects the way the web pages are structured. Currently only a flat sitemap is supported */
 case class Sitemap(items: Traversable[Item]) {
-  def navigation(current: String) = Navigation(items, current)
+  /** Build a Navigation object having as default item the item with `current` as uri */
+  def navigation(active: Item) = Navigation(items, active)
 }
 
 /** Navigation data contain the list of items of a site and the current item */
-case class Navigation(items: Traversable[Item], current: String) {
-  def currentName = items.find(_.uri == current).get.name // Not very sound function
-}
+case class Navigation(items: Traversable[Item], active: Item)
 
 object Navigation {
   /** Display a `Navigation` instance as a HTML list */
   def _template(navigation: Navigation): Xml =
       'nav :: forM (navigation.items) { it =>
-        val a: EmptyTag = if (it.uri == navigation.current) 'a % ('class->"active") else 'a // FIXME not pretty
+        val a: EmptyTag = if (it.uri == navigation.active) 'a % ('class->"active") else 'a // FIXME not pretty
         a %('href->it.uri, 'title->it.name) :: it.name
       }
 }

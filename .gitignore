@@ -5,3 +5,4 @@ project/boot
 /.classpath
 /.project
 /.scala_dependencies
+/.cache

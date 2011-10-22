@@ -23,6 +23,7 @@ import java.io.File
 /** A Site provides a set of resources reachable through URIs. */
 trait Site {
   
+  /** Map of path -> compiler, defining the reachable uri and how to render their content */
   private[this] val resources = collection.mutable.Map.empty[String, Compiler]
   
   type ResourceBuilder = {

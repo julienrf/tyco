@@ -9,6 +9,6 @@ class FilesTest extends FunSuite with ShouldMatchers {
   
   test("Files(\"src/test/scala/tyco/*.scala\") finds this test file") {
     val files = Files("src/test/scala/tyco/*.scala")
-    assert(files.find(_.getName.equals("FilesTest.scala")).isDefined)
+    files.find(_.getName.equals("FilesTest.scala")) should be ('defined)
   }
 }

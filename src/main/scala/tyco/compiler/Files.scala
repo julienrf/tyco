@@ -16,31 +16,25 @@
 
 package tyco.compiler
 
-import java.io.{File, FilenameFilter}
-import org.apache.commons.io.filefilter.WildcardFileFilter
+import java.io.File
+import com.esotericsoftware.wildcard.Paths
 
 import collection.JavaConversions._
 
-/** Helper to find files */
+// FIXME Find files from src/resources path by default
+/**
+ * Helper to find files
+ * It uses the [[http://code.google.com/p/wildcard/ wildcard]] library under the hood and share the same syntax for wildcards.
+ * Usage example:
+ * {{{
+ *   for (images <- Files("src/resources/assets/**/*.jpg")) {
+ *     println(images.getName)
+ *   }
+ * }}}
+ */
 object Files {
-  def apply(path: String): Traversable[File] = {
-    val dir = new File(if (path.startsWith(fileSep)) fileSep else ".")
-    val dirs = if (dir != null) List(dir) else Nil
-    walk(dirs, path.split(fileSep).toList)
-  }
-  
-  private def walk(dirs: List[File], path: List[String]): Traversable[File] = path match {
-    case dir :: remainingPath => {
-      val filter: FilenameFilter = new WildcardFileFilter(path.head)
-      val filesFound = for {
-        dir <- dirs
-        file <- dir.listFiles(filter)
-        if file != null
-      } yield file
-      walk(filesFound, remainingPath)
-    }
-    case Nil => dirs
-  }
+  def apply(path: String): Traversable[File] =
+    new Paths(if (path.startsWith(fileSep)) fileSep else ".", path).getFiles()
   
   private val fileSep = File.separator
 }

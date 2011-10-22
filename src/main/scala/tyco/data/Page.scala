@@ -15,11 +15,11 @@
  */
 
 /** Generic page concept */
-package tyco.page
+package tyco.data.page
 
 import glitter._
 
-/** A Page is a web content identified by a title and a content */
+/** A Page is a web content identified by a title and a HTML content */
 case class Page(title: String, content: String)
 
 object Page {

@@ -89,8 +89,8 @@ trait Markdown extends TextCompiler {
   }
 }
 
-/** Compile SCSS into legacy CSS */
-trait Scss extends TextCompiler {
+/** Compile Less into legacy CSS */
+trait Less extends TextCompiler {
   abstract override def process = {
     super.process
   }
