@@ -1,6 +1,7 @@
 package tyco
 
 import tyco.compiler._
+import scalax.file.Path
 
 /**
  * Defines routes copying files from an assets directory.
@@ -10,11 +11,14 @@ import tyco.compiler._
  */
 trait Assets {
   self: Site =>
-  
+
   /* Define routes for found assets */
-  for (file <- Files("src/resources/assets/**") if file.isFile()) {
-    val path = file.getPath.substring(file.getPath.indexOf("src/resources/assets/") + "src/resources".length)
-    def hasExtension(e: String) = file.getName.endsWith("." + e)
+  for {
+    basePath <- base
+    file <- (basePath / "assets").***
+    if file.isFile
+  } {
+    def hasExtension(e: String) = file.extension.map(_ == e).getOrElse(false)
     val compiler =
       if (hasExtension("js")) {
         new TextFile(file) with JsMinifier
@@ -27,9 +31,9 @@ trait Assets {
       } else {
         new BinFile(file)
       }
-    
-    path ==> compiler
+
+    "/" + file.relativize(basePath).path ==> compiler
   }
-  
+
   // TODO provide an asset function returning the path of an existing asset or throwing an exception (or logging an error) if not found
 }

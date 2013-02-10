@@ -17,51 +17,66 @@
 package tyco
 
 import tyco.compiler.Compiler
-import org.apache.commons.io.FileUtils
-import java.io.File
+import scalax.file.Path
 
 /** A Site provides a set of resources reachable through URIs. */
 trait Site {
-  
+
   /** Map of path -> compiler, defining the reachable uri and how to render their content */
-  private[this] val resources = collection.mutable.Map.empty[String, Compiler]
-  
+  private[this] val resources = new Resources
+
   type ResourceBuilder = {
-    def ==> (c: Compiler)
-    def ==> (alias: String)
+    def ==> (c: Compiler): Resource
+    def ==> (alias: String): Resource
   }
-  
+
   implicit def makeBuilder(uri: String): ResourceBuilder = new {
-  
+
     private def check(uri: String) {
       if (resources contains uri) {
         println("Warning: uri '" + uri + "' used multiple times")
       }
     }
-    
-    def ==> (compiler: Compiler) {
-      check(uri)
-      resources += uri -> compiler
+
+    private def register(uri: String, compiler: Compiler): Resource = {
+      val resource = Resource(uri, compiler)
+      resources += resource
+      resource
     }
-    
-    def ==> (alias: String) {
+
+    def ==> (compiler: Compiler): Resource = {
       check(uri)
-      resources.get(alias) match {
-        case Some(compiler) => resources += uri -> compiler
-        case None => println("Warning: no resource defined for uri '" + alias + "'")
-      }
+      register(uri, compiler)
+    }
+
+    def ==> (alias: String): Resource = {
+      check(uri)
+      resources.compiler(alias) map (register(uri, _)) getOrElse sys.error("No resource defined for uri '" + alias + "'")
     }
   }
-  
+
   /** Compiles all resources defined by this Site to a given target */
-  def compile(target: String = "target/www") {
-    FileUtils.deleteDirectory(new File(target))
+  def compile(target: Path = Path(".") / "target" / "www") {
+
+    target.deleteRecursively()
     for ((uri, compiler) <- resources) {
       print("Compiling "+uri+" ")
-      val path = target + (if (uri.lastIndexOf("/") < uri.lastIndexOf(".")) uri
-                           else uri + "/index.html")
-      compiler.compile(path)
+      val resourcePath = if (uri.lastIndexOf("/") < uri.lastIndexOf(".")) {
+        target / (uri, '/')
+      } else {
+        if (uri == "/") { // Special case of the root url
+          target / "index.html"
+        } else {
+          target / (uri, '/') / "index.html"
+        }
+      }
+      compiler.compile(resourcePath)
       println("OK");
     }
   }
+
+  lazy val base = for {
+    base <- Option(getClass.getResource("/"))
+    path <- Path(base.toURI)
+  } yield path
 }

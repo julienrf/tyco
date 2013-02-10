@@ -16,13 +16,12 @@
 
 package tyco.compiler
 
-import java.io.{File, ByteArrayInputStream, ByteArrayOutputStream}
-import org.apache.commons.io.FileUtils
 import glitter._
 import javax.imageio.ImageIO
 import java.awt.image.BufferedImage
 import java.awt.Color
-import collection.JavaConversions._
+import scalax.file.Path
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 /** Base class of compilers, subclassed to implement CoffeeScript or SCSS compilers.
   * Implement your own compiler as a trait if it is intended to be chained
@@ -33,15 +32,15 @@ abstract class Compiler {
   
   /** Produce an output. */
   def process: Traversable[Elem]
-  def compile(target: String)
+  def compile(target: Path)
 }
 
 abstract class TextCompiler extends Compiler {
   
   override type Elem = Char
   
-  override def compile(target: String) {
-    FileUtils.writeStringToFile(new File(target), process.mkString)
+  override def compile(target: Path) {
+    target.write(process.mkString)
   }
 }
 
@@ -49,8 +48,8 @@ abstract class BinCompiler extends Compiler {
   
   override type Elem = Byte
   
-  override def compile(target: String) {
-    FileUtils.writeByteArrayToFile(new File(target), process.toArray)
+  override def compile(target: Path) {
+    target.write(process)
   }
 }
 
@@ -60,8 +59,8 @@ class Glitter(content: Xml) extends TextCompiler {
 }
 
 /** TextFile compiler, reading a file */
-class TextFile(file: File) extends TextCompiler {
-  override def process: Traversable[Char] = io.Source.fromFile(file).mkString
+class TextFile(file: Path) extends TextCompiler {
+  override def process: Traversable[Char] = file.slurpString
 }
 
 /** CoffeeScript compiler, translating a coffee script to legacy javascript.
@@ -103,8 +102,8 @@ trait CssMinifier extends TextCompiler {
   }
 }
 
-class BinFile(file: File) extends BinCompiler {
-  override def process: Traversable[Byte] = FileUtils.readFileToByteArray(file)
+class BinFile(file: Path) extends BinCompiler {
+  override def process: Traversable[Byte] = file.byteArray
 }
 
 trait Image extends BinCompiler {

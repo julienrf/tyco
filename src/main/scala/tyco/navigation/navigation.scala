@@ -38,8 +38,8 @@ case class Navigation(items: Traversable[Item], active: Item)
 object Navigation {
   /** Display a `Navigation` instance as a HTML list */
   def _template(navigation: Navigation): Xml =
-      'nav :: forM (navigation.items) { it =>
-        val a: EmptyTag = if (it.uri == navigation.active) 'a % ('class->"active") else 'a // FIXME not pretty
+      'nav (for (it <- navigation.items) yield {
+        val a: EmptyTag = if (it == navigation.active) 'a % ('class->"active") else 'a // FIXME not pretty
         a %('href->it.uri, 'title->it.name) :: it.name
-      }
+      })
 }
