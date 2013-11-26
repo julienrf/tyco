@@ -60,7 +60,7 @@ class Glitter(content: Xml) extends TextCompiler {
 
 /** TextFile compiler, reading a file */
 class TextFile(file: Path) extends TextCompiler {
-  override def process: Traversable[Char] = file.slurpString
+  override def process: Traversable[Char] = file.string
 }
 
 /** CoffeeScript compiler, translating a coffee script to legacy javascript.
